@@ -1,5 +1,4 @@
 from pathlib import Path
-from collections import Counter
 
 import torch
 import torch.nn as nn
@@ -7,7 +6,7 @@ from torch.optim import Adam
 from tqdm import tqdm
 
 from src.data.dataset import create_dataloaders
-from src.models.baseline_cnn import BaselineCNN
+from src.models.improved_cnn import ImprovedCNN
 
 
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
@@ -90,52 +89,6 @@ def evaluate(model, dataloader, criterion, device):
     return avg_loss, accuracy
 
 
-def compute_class_weights(dataset, num_classes):
-    """
-    Compute class weights from a training dataset.
-
-    We want rarer classes to receive larger weights so that mistakes
-    on underrepresented classes are penalized more during training.
-
-    Expected dataset behavior:
-    - dataset[i] returns (image, label)
-    - label is an integer class index in [0, num_classes-1]
-
-    Returns:
-        class_weights: torch.FloatTensor of shape [num_classes]
-    """
-    label_counts = Counter()
-
-    for i in range(len(dataset)):
-        _, label = dataset[i]
-        label_counts[label] += 1
-
-    print("\nTraining class counts:")
-    for class_idx in range(num_classes):
-        print(f"Class {class_idx}: {label_counts[class_idx]}")
-
-    total_samples = sum(label_counts.values())
-
-    class_weights = []
-    for class_idx in range(num_classes):
-        count_i = label_counts[class_idx]
-
-        if count_i == 0:
-            weight_i = 0.0
-        else:
-            weight_i = total_samples / (num_classes * count_i)
-
-        class_weights.append(weight_i)
-
-    class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
-    print("\nComputed class weights:")
-    for class_idx, weight in enumerate(class_weights):
-        print(f"Class {class_idx}: {weight.item():.4f}")
-
-    return class_weights
-
-
 def main():
     # -----------------------------
     # Config
@@ -151,7 +104,7 @@ def main():
 
     checkpoint_dir = Path("checkpoints")
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    best_model_path = checkpoint_dir / "baseline_cnn_weighted_best.pth"
+    best_model_path = checkpoint_dir / "improved_cnn_best.pth"
 
     # -----------------------------
     # Device
@@ -183,14 +136,8 @@ def main():
     # -----------------------------
     # Model, loss, optimizer
     # -----------------------------
-    model = BaselineCNN(num_classes=num_classes).to(device)
-
-    class_weights = compute_class_weights(
-        train_loader.dataset,
-        num_classes=num_classes
-    ).to(device)
-
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    model = ImprovedCNN(num_classes=num_classes).to(device)
+    criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=learning_rate)
 
     # -----------------------------
