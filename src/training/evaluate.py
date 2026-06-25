@@ -124,7 +124,7 @@ def main():
     num_workers = 0
     seed = 42
 
-    checkpoint_path = Path("checkpoints/baseline_cnn_best.pth")
+    checkpoint_path = Path("checkpoints/baseline_cnn_weighted_best.pth")
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
