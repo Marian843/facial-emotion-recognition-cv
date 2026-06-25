@@ -1,12 +1,11 @@
 from pathlib import Path
 
 import torch
-import torch.nn as nn
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report, ConfusionMatrixDisplay
 
 from src.data.dataset import create_dataloaders
-from src.models.baseline_cnn import BaselineCNN
+from src.models.improved_cnn import ImprovedCNN
 
 
 CLASS_NAMES = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
@@ -66,7 +65,7 @@ def collect_sample_predictions(model, dataloader, device, max_images=8):
 
 def compute_per_class_accuracy(cm):
     """
-    Compute per-class accuracy from confusion matrix.
+    Compute per-class accuracy (recall) from confusion matrix.
 
     cm shape: [num_classes, num_classes]
     rows = true labels
@@ -123,8 +122,9 @@ def main():
     val_split = 0.1
     num_workers = 0
     seed = 42
+    num_classes = 7
 
-    checkpoint_path = Path("checkpoints/baseline_cnn_weighted_best.pth")
+    checkpoint_path = Path("checkpoints/improved_cnn_best.pth")
     if not checkpoint_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
@@ -154,7 +154,7 @@ def main():
     # -----------------------------
     # Model
     # -----------------------------
-    model = BaselineCNN(num_classes=7).to(device)
+    model = ImprovedCNN(num_classes=num_classes).to(device)
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
     print(f"Loaded checkpoint from: {checkpoint_path}")
 
@@ -172,8 +172,8 @@ def main():
 
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=CLASS_NAMES)
     fig, ax = plt.subplots(figsize=(8, 8))
-    disp.plot(ax=ax, xticks_rotation=45, colorbar=False, cmap="Blues") 
-    plt.title("FER2013 Test Confusion Matrix")
+    disp.plot(ax=ax, xticks_rotation=45, colorbar=False, cmap="Purples")
+    plt.title("ImprovedCNN Test Confusion Matrix")
     plt.tight_layout()
     plt.show()
 
