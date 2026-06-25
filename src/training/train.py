@@ -104,7 +104,7 @@ def main():
 
     checkpoint_dir = Path("checkpoints")
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    best_model_path = checkpoint_dir / "improved_cnn_best.pth"
+    best_model_path = checkpoint_dir / "improved_cnn_aug_best.pth"
 
     # -----------------------------
     # Device
